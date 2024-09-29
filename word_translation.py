@@ -15,8 +15,12 @@ import streamlit as st
 # config
 ############################
 
+try:
+    api_key = st.secrets["api_key"]
+except FileNotFoundError:
+    api_key = os.environ["api_key"]
 
-api_key = st.secrets["api_key"]
+    
 model = "mistral-small-latest"
 
 client = Mistral(api_key=api_key)
