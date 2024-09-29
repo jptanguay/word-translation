@@ -14,10 +14,13 @@ import streamlit as st
 ############################
 # config
 ############################
+st.set_option('client.showErrorDetails', False)
+
 
 try:
     api_key = st.secrets["api_key"]
 except FileNotFoundError:
+    st.error('Using environment')
     api_key = os.environ["api_key"]
 
     
@@ -48,10 +51,12 @@ Pour chaque mot de cette liste écrire une ligne comprenant
 le mot dans langue originale du texte et la traduction française,
 en suivant ce format: "mot;traduction;0;0"
 
-### Directives supplémentaires
+### Étape 4
 
-- Ne pas répèter les mots qui ont déjà été traité(e)s
-- Fournir seulement le résultat de l'étape #3
+Ne pas répèter les lignes identiques;
+enlever les doublons de la liste produite à l'étape #3
+
+### Directives supplémentaires
 - N'écrire aucun commentaire.
 - Ne pas oublier que la traduction doit être en français!
 
@@ -61,7 +66,7 @@ Merci
 {text}
 """
 
-
+# - Fournir seulement le résultat de l'étape #3
 
 
 ############################
@@ -105,21 +110,39 @@ with con1:
         ["nom", "adjectif", "verbe", "adverbe", "conjonction", "pronom", "préposition"],
         horizontal=True
     )
+    c1, c2 = st.columns(2)
+    with c1:
+        show_query = st.checkbox("Afficher la requête?")
+    with c2:
+        show_all_steps = st.checkbox("Afficher toutes les étapes de la réponse ?")
+        
     prompt = st.chat_input("Texte à analyser")
     if prompt:
-        st.write(f"Texte envoyé:\n {prompt}")
+        st.write(f"### Texte envoyé")
+        st.write(prompt)
 
         #word_types = ", ".join(options)
         #query = template.format(word_type, word_type, word_type, word_type, prompt)
         query = template.replace("{category}", word_type)
         query = query.replace("{text}", prompt)
-        con = st.container(border=True)
-        con.write(query)
+
+        if show_query:
+            con = st.container(border=True)
+            con.write(query)
 
         st.subheader("Résultat")
-        s = GetTranslation(query)
+        
+        #with st.spinner('En cours...'):
+        result = GetTranslation(query)
+
+        if show_all_steps:
+            s = result
+        else:
+            s = result.split("Étape #4",1)[1]
+        
         st.text(s)
 
+        #st.text_area("Résultat", value=s)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
